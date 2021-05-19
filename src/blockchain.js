@@ -11,6 +11,7 @@
 const SHA256 = require('crypto-js/sha256');
 const BlockClass = require('./block.js');
 const bitcoinMessage = require('bitcoinjs-message');
+const hex2ascii = require('hex2ascii');
 
 class Blockchain {
 
@@ -63,6 +64,7 @@ class Blockchain {
      */
     _addBlock(block) {
         let self = this;
+
         return new Promise(async (resolve, reject) => {
             try {
                 let numBlocks = self.chain.length;
@@ -133,6 +135,7 @@ class Blockchain {
      */
     submitStar(address, message, signature, star) {
         let self = this;
+
         return new Promise(async (resolve, reject) => {
             const SEP = ":";
             const VALID_THRESHOLD = 60 * 1000 * 5;
@@ -165,10 +168,11 @@ class Blockchain {
      */
     getBlockByHash(hash) {
         let self = this;
+
         return new Promise((resolve, reject) => {
 
            if (self.chain.isEmpty) {
-                resolve("Error, target block by hash, chain is empty");
+                resolve("Error, get block by hash, chain is empty!");
 
            } else {
                 let target = null;
@@ -186,9 +190,9 @@ class Blockchain {
                     resolve(target);
 
                 } else {
-                    reject(`Target block by hash ${hash} not found`);
+                    reject(`Target block with hash ${hash} not found`);
                 }
-           }
+            }
         });
     }
 
@@ -199,6 +203,7 @@ class Blockchain {
      */
     getBlockByHeight(height) {
         let self = this;
+
         return new Promise((resolve, reject) => {
             let block = self.chain.filter(p => p.height === height)[0];
             if(block){
@@ -218,8 +223,22 @@ class Blockchain {
     getStarsByWalletAddress (address) {
         let self = this;
         let stars = [];
+
         return new Promise((resolve, reject) => {
-            
+            if (this.chain.isEmpty) {
+                reject("Error, stars by address, chain is empty!");
+
+            } else {
+                for (var i = 0; i < self.chain.length; i++) {
+                    var currentBlock = self.chain[i].block;
+
+                    if (currentBlock.address == address) {
+                        stars.push(hex2ascii(currentBlock.data));
+                    }
+                }
+
+                resolve(stars);
+            }
         });
     }
 
@@ -232,6 +251,7 @@ class Blockchain {
     validateChain() {
         let self = this;
         let errorLog = [];
+        
         return new Promise(async (resolve, reject) => {
             
         });
