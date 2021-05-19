@@ -87,7 +87,7 @@ class Blockchain {
                 resolve(block);
 
             } catch (e) {
-                resolve("Error while adding a block");
+                resolve(`Error while adding block with hash:"${block.hash}". Please try again`);
             }
         });
     }
@@ -172,7 +172,7 @@ class Blockchain {
         return new Promise((resolve, reject) => {
 
            if (self.chain.isEmpty) {
-                resolve("Error, get block by hash, chain is empty!");
+                resolve("Error while searching blocks by hash, chain is empty!");
 
            } else {
                 let target = null;
@@ -206,7 +206,7 @@ class Blockchain {
 
         return new Promise((resolve, reject) => {
             let block = self.chain.filter(p => p.height === height)[0];
-            if(block){
+            if (block){
                 resolve(block);
             } else {
                 resolve(null);
@@ -226,7 +226,7 @@ class Blockchain {
 
         return new Promise((resolve, reject) => {
             if (this.chain.isEmpty) {
-                reject("Error, stars by address, chain is empty!");
+                reject("Error while searching stars by address, chain is empty!");
 
             } else {
                 for (var i = 0; i < self.chain.length; i++) {
@@ -251,9 +251,36 @@ class Blockchain {
     validateChain() {
         let self = this;
         let errorLog = [];
-        
+
         return new Promise(async (resolve, reject) => {
             
+            if (self.chain.isEmpty) {
+                reject("Error while validating, chain is empty!");
+            } else {
+                for (var i = 0; i < self.chain.length; i++) {
+                    var currentBlock = self.chain[i];
+
+                    // BLOCK VALIDATION
+                    var currentValid = currentBlock.validate();
+
+                    // CHAIN VALIDATION
+                    if (currentValid) {
+
+                        // OTHER THAN GENESIS...
+                        if (currentBlock.height > 0) {
+                            var j = i - 1;
+                            if (currentBlock.previousBlockHash != self.chain[j].hash) {
+                                errors.push(`Invalid previous block for block with height: ${currentBlock.height}`);
+                            }
+                        }
+
+                    } else {
+                        errors.push(`Invalid block at position ${currentBlock.height}`);
+                    }
+                }
+
+                resolve(errors);
+            }
         });
     }
 
