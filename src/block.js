@@ -50,12 +50,12 @@ class Block {
                 let match = (storedHash == currentHash);
 
                 if (match) {
-                    // Returning the Block is not valid
-                    return resolve();
+                    // Returning the Block is valid
+                    resolve(match);
 
                 } else {
-                    // Returning the Block is valid
-                    return reject();
+                    // Returning the Block is not valid
+                    reject();
                 }
             }
         );
@@ -94,14 +94,14 @@ class Block {
                 if (blockBodyObj) {
 
                     if (self.isGenesisBlock()) {
-                        return reject();
+                        reject();
 
                     } else {
-                        return resolve(blockBodyObj);
+                        resolve(blockBodyObj);
                     }
 
                 } else {
-                    return reject();
+                    reject();
                 }
             }
         );
