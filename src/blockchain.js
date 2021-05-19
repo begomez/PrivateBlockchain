@@ -166,7 +166,29 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           
+
+           if (self.chain.isEmpty) {
+                resolve("Error, target block by hash, chain is empty");
+
+           } else {
+                let target = null;
+
+                for (var i = 0; i < self.chain.length; i++) {
+                    var current = self.chain[i];
+
+                    if (current.hash == hash) {
+                        target = current;
+                        break;
+                    }
+                }
+
+                if (target) {
+                    resolve(target);
+
+                } else {
+                    reject(`Target block by hash ${hash} not found`);
+                }
+           }
         });
     }
 
