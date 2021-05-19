@@ -69,7 +69,7 @@ class Blockchain {
             
 
                 block.height = numBlocks;
-                block.time = new Date().toString().slice(0, -3);
+                block.time = new Date().getTime().toString().slice(0, -3);
     
                 if (self.isEmpty(numBlocks)) {
                     block.previousBlockHash = null;
@@ -104,7 +104,13 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            
+            const TEMPLATE = "<<WALLET_ADDRESS>>:<<NOW>>:starRegistry";
+
+            let msg = TEMPLATE.replace("<<WALLET_ADDRESS>>", this.address);
+
+            msg = TEMPLATE.replace("<<NOW>>", new Date().getTime().toString().slice(0, -3));
+
+            resolve(msg);
         });
     }
 
