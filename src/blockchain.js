@@ -134,7 +134,26 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            
+            const SEP = ":";
+            const VALID_THRESHOLD = 60 * 1000 * 5;
+
+            let nowTime = parseInt(new Date().getTime().toString().slice(0, -3));
+            let recTime = parseInt(message.split(SEP)[1]);
+
+            // VALID
+            if ((nowTime - recTime) <= VALID_THRESHOLD) {
+                bitcoinMessage.verify(message, address, signature);
+
+                let block = new BlockClass.Block(star);
+
+                self._addBlock(block);
+
+                resolve(block);
+
+            // INVALID
+            } else {
+                reject();
+            }
         });
     }
 
