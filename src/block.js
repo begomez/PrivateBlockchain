@@ -29,7 +29,7 @@ class Block {
      *  values in the block data as a consecuence the hash of the block should be different.
      *  Steps:
      *  1. Return a new promise to allow the method be called asynchronous.
-     *  2. Save the in auxiliary variable the current hash of the block (`this` represent the block object)
+     *  2. Save in auxiliary variable the current hash of the block (`this` represent the block object)
      *  3. Recalculate the hash of the entire block (Use SHA256 from crypto-js library)
      *  4. Compare if the auxiliary hash value is different from the calculated one.
      *  5. Resolve true or false depending if it is valid or not.
@@ -39,13 +39,23 @@ class Block {
         let self = this;
         return new Promise((resolve, reject) => {
             // Save in auxiliary variable the current block hash
-                                            
-            // Recalculate the hash of the Block
-            // Comparing if the hashes changed
-            // Returning the Block is not valid
-            
-            // Returning the Block is valid
+                   
+            var storedHash = self.hash;
 
+            // Recalculate the hash of the Block
+            var currentHash = SHA256(JSON.stringify(self)).toString();
+
+            // Comparing if the hashes changed
+            let match = (storedHash == currentHash);
+
+            if (match) {
+                // Returning the Block is not valid
+                return resolve();
+
+            } else {
+                // Returning the Block is valid
+                return reject();
+            }
         });
     }
 
