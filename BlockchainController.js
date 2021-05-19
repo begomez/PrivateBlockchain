@@ -1,3 +1,5 @@
+const bodyParser = require("body-parser");
+
 /**
  *          BlockchainController
  *       (Do not change this code)
@@ -27,8 +29,8 @@ class BlockchainController {
 
     // Endpoint to trigger standalone chain validation
     validateChain() {
-        this.app.get("/validateChain", async (req, resp) => {
-            let result = await this.block.validateChain();
+        this.app.get("/requestChainValidation", async (req, resp) => {
+            let result = await this.blockchain.validateChain();
 
             if (result) {
                 return resp.status(200).json(result);
@@ -69,8 +71,8 @@ class BlockchainController {
     requestOwnership() {
         this.app.post("/requestValidation", async (req, res) => {
 
-            // VALID PARAM
-            if (req.body.address) {
+            // VALID REQ
+            if (req.body) {
                 const targetAddress = req.body.address;
                 const message = await this.blockchain.requestMessageOwnershipVerification(targetAddress);
 
@@ -83,9 +85,9 @@ class BlockchainController {
                     return res.status(500).send("An error happened!");
                 }
 
-            // INVALID PARAM
+            // INVALID REQ
             } else {
-                return res.status(500).send("Check the Body Parameter!");
+                return res.status(500).send(`Check the Body Parameter: ${JSON.stringify(req.body.address).toString()}`);
             }
         });
     }
@@ -94,32 +96,36 @@ class BlockchainController {
     submitStar() {
         this.app.post("/submitstar", async (req, res) => {
 
-            // VALID PARAMS
-            if (req.body.address && req.body.message && req.body.signature && req.body.star) {
+            // VALID REQ
+            if (req.body) {
                 const targetAddress = req.body.address;
                 const targetMessage = req.body.message;
                 const targetSignature = req.body.signature;
                 const targetStar = req.body.star;
 
                 try {
-                    let block = await this.blockchain.submitStar(targetAddress, targetMessage, targetSignature, targetStar);
-                    
-                    // DATA RETRIEVED
-                    if (block){
-                        return res.status(200).json(block);
+                    if (targetAddress && targetMessage && targetSignature && targetStar) {
+                        let block = await this.blockchain.submitStar(targetAddress, targetMessage, targetSignature, targetStar);
+                        
+                        // DATA RETRIEVED
+                        if (block){
+                            return res.status(200).json(block);
 
-                    // ERROR   
+                        // ERROR   
+                        } else {
+                            return res.status(500).send("An error happened!");
+                        }                        
                     } else {
-                        return res.status(500).send("An error happened!");
+                        return res.status(500).send(`Check the Body Parameter: ${JSON.stringify(req.body).toString()}`); 
                     }
 
                 } catch (error) {
                     return res.status(500).send(error);
                 }
 
-            // INVALID PARAMS
+            // INVALID REQ
             } else {
-                return res.status(500).send("Check the Body Parameter!");
+                return res.status(500).send(`Check the Body Parameter: ${JSON.stringify(req.body).toString()}`);
             }
         });
     }
@@ -144,7 +150,7 @@ class BlockchainController {
 
             // INVALID PARAMS
             } else {
-                return res.status(404).send("Block Not Found! Review the Parameters!");
+                return res.status(404).send("Block Not Found! Review the Parameters: " + req.params.hash);
             }
         
         });

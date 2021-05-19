@@ -10,6 +10,7 @@
 
 const SHA256 = require('crypto-js/sha256');
 const BlockClass = require('./block.js');
+const Logger = require('../utils/logger.js');
 const bitcoinMessage = require('bitcoinjs-message');
 const hex2ascii = require('hex2ascii');
 
@@ -37,6 +38,7 @@ class Blockchain {
     async initializeChain() {
         if( this.height === -1){
             let block = new BlockClass.Block({data: 'Genesis Block'});
+
             await this._addBlock(block);
         }
     }
@@ -84,10 +86,12 @@ class Blockchain {
 
                 self.chain.push(block);
 
+                self.validateChain();
+
                 resolve(block);
 
             } catch (e) {
-                resolve(`Error while adding block with hash:"${block.hash}". Please try again`);
+                reject(`Error while adding block with hash:"${block.hash}". Please try again`).catch(error => { new Logger.Logger().e(error.message); });
             }
         });
     }
@@ -105,12 +109,16 @@ class Blockchain {
      * @param {*} address 
      */
     requestMessageOwnershipVerification(address) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            new Logger.Logger().i("requestMessageOwnershipVerification", "received address: " + address);
+
             const TEMPLATE = "<<WALLET_ADDRESS>>:<<NOW>>:starRegistry";
 
-            let msg = TEMPLATE.replace("<<WALLET_ADDRESS>>", this.address);
+            let msg = TEMPLATE.replace("<<WALLET_ADDRESS>>", address);
 
-            msg = TEMPLATE.replace("<<NOW>>", new Date().getTime().toString().slice(0, -3));
+            msg = msg.replace("<<NOW>>", new Date().getTime().toString().slice(0, -3));
+
+            new Logger.Logger().i("requestMessageOwnershipVerification", "resolving with: " + msg);
 
             resolve(msg);
         });
@@ -125,7 +133,7 @@ class Blockchain {
      * 1. Get the time from the message sent as a parameter example: `parseInt(message.split(':')[1])`
      * 2. Get the current time: `let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));`
      * 3. Check if the time elapsed is less than 5 minutes
-     * 4. Veify the message with wallet address and signature: `bitcoinMessage.verify(message, address, signature)`
+     * 4. Verify the message with wallet address and signature: `bitcoinMessage.verify(message, address, signature)`
      * 5. Create the block and add it to the chain
      * 6. Resolve with the block added.
      * @param {*} address 
@@ -134,6 +142,11 @@ class Blockchain {
      * @param {*} star 
      */
     submitStar(address, message, signature, star) {
+        new Logger.Logger().i("submitStar", "received address: " + address);
+        new Logger.Logger().i("submitStar", "received message: " + message);
+        new Logger.Logger().i("submitStar", "received signature: " + signature);
+        new Logger.Logger().i("submitStar", "received star: " + star);
+
         let self = this;
 
         return new Promise(async (resolve, reject) => {
@@ -147,7 +160,14 @@ class Blockchain {
             if ((nowTime - recTime) <= VALID_THRESHOLD) {
                 bitcoinMessage.verify(message, address, signature);
 
-                let block = new BlockClass.Block(star);
+                let block = new BlockClass.Block(
+                    {
+                        "address" : address,
+                        "message" : message,
+                        "star" : star,
+                        "signature" : signature
+                    }
+                );
 
                 self._addBlock(block);
 
@@ -155,7 +175,7 @@ class Blockchain {
 
             // INVALID
             } else {
-                reject();
+                reject(`Submitted star expired at: ${recTime}`).catch(error => { new Logger.Logger().e(error.message); });
             }
         });
     }
@@ -190,7 +210,7 @@ class Blockchain {
                     resolve(target);
 
                 } else {
-                    reject(`Target block with hash ${hash} not found`);
+                    reject(`Target block with hash ${hash} not found`).catch(error => { new Logger.Logger().e(error.message); });
                 }
             }
         });
@@ -206,8 +226,12 @@ class Blockchain {
 
         return new Promise((resolve, reject) => {
             let block = self.chain.filter(p => p.height === height)[0];
+
             if (block){
+                new Logger.Logger().i("getBlockByHeight", "resolving with block: " + block.toString());
+
                 resolve(block);
+            
             } else {
                 resolve(null);
             }
@@ -221,23 +245,34 @@ class Blockchain {
      * @param {*} address 
      */
     getStarsByWalletAddress (address) {
+        new Logger.Logger().i("getStarsByWalletAddress", "received address: " + address);
+
         let self = this;
         let stars = [];
 
         return new Promise((resolve, reject) => {
             if (this.chain.isEmpty) {
-                reject("Error while searching stars by address, chain is empty!");
+                reject("Error while searching stars by address, chain is empty!").catch(error => { new Logger.Logger().e(error.message); });
 
             } else {
-                for (var i = 0; i < self.chain.length; i++) {
-                    var currentBlock = self.chain[i].block;
-
-                    if (currentBlock.address == address) {
-                        stars.push(hex2ascii(currentBlock.data));
-                    }
+                for (var i = 1; i < self.chain.length; i++) {
+                    var currentBlock = self.chain[i];
+                    new Logger.Logger().i("Current block:" + currentBlock);
+                    var currentStar = currentBlock.getBData().then((data) => { 
+                        new Logger.Logger().i("retrieved data: " + data);
+                        if (data.address == address) {
+                            stars.push(data);
+                        }
+                    });
                 }
 
-                resolve(stars);
+                if (stars.isEmpty) {
+                    reject(`No stars found for address ${address}`).catch(error => { console.log('caught', error.message); });;
+
+                } else {
+                    resolve(stars);
+                }
+
             }
         });
     }
@@ -279,7 +314,7 @@ class Blockchain {
                     }
                 }
 
-                resolve(errors);
+                resolve(errorLog);
             }
         });
     }

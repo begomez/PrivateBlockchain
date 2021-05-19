@@ -11,6 +11,8 @@
 
 const SHA256 = require('crypto-js/sha256');
 const hex2ascii = require('hex2ascii');
+const Logger = require('../utils/logger.js');
+
 
 class Block {
 
@@ -49,16 +51,13 @@ class Block {
                 // Comparing if the hashes changed
                 let match = (storedHash == currentHash);
 
-                if (match) {
-                    // Returning the Block is valid
-                    resolve(match);
-
-                } else {
-                    // Returning the Block is not valid
-                    reject();
-                }
+                resolve(match);
             }
         );
+    }
+
+    toString() {
+        return JSON.stringify(this).toString();
     }
 
     isGenesisBlock() {
@@ -88,20 +87,20 @@ class Block {
                 let decoded = hex2ascii(encoded);
 
                 // Parse the data to an object to be retrieve.
-                let blockBodyObj = JSON.parse(decoded).toString();
+                let blockBodyObj = JSON.parse(decoded);
 
                 // Resolve with the data if the object isn't the Genesis block
                 if (blockBodyObj) {
 
                     if (self.isGenesisBlock()) {
-                        reject();
+                        reject("Ignoring Genesis Block when retrieving block body").catch(error => { new Logger.Logger().e(error.message); });;
 
                     } else {
                         resolve(blockBodyObj);
                     }
 
                 } else {
-                    reject();
+                    reject("Invalid block body retrieved").catch(error => { new Logger.Logger().e(error.message);});
                 }
             }
         );

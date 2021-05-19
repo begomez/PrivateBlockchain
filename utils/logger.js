@@ -9,11 +9,18 @@ class Logger {
     }
 
     i(tag, msg) {
-        console.log(tag + " " + msg);
+        console.log(tag);
+        console.log(msg);
     }
 
     e(msg) {
-        console.log("ERROR: " + msg);
+        this.e("", msg);
+    }
+
+    e(tag, msg) {
+        console.log("ERROR");
+        console.log(tag);
+        console.log(msg);
     }
 }
 
