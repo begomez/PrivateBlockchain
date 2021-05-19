@@ -91,11 +91,17 @@ class Block {
                 let blockBodyObj = JSON.parse(decoded).toString();
 
                 // Resolve with the data if the object isn't the Genesis block
-                if (self.isGenesisBlock()) {
-                    return reject();
+                if (blockBodyObj) {
+
+                    if (self.isGenesisBlock()) {
+                        return reject();
+
+                    } else {
+                        return resolve(blockBodyObj);
+                    }
 
                 } else {
-                    return resolve(blockBodyObj);
+                    return reject();
                 }
             }
         );
