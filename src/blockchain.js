@@ -90,13 +90,14 @@ class Blockchain {
                 self.chain.push(block);
 
                 //XXX: always validate chain after adding...
-                self.validateChain();
+                await self.validateChain();
 
                 resolve(block);
 
             } catch (e) {
                 reject(`Error while adding block with hash:"${block.hash}". Please try again`)
-                    .catch(error => { Logger.Logger.e(error.message); });
+                    //.catch(error => { Logger.Logger.e(error); })
+                    ;
             }
         });
     }
@@ -151,7 +152,7 @@ class Blockchain {
 
         return new Promise(async (resolve, reject) => {
             const SEP = ":";
-            const VALID_THRESHOLD = 5 * 1000;// 5 sec * 1000 milis/sec
+            const VALID_THRESHOLD = 5 * 60 * 1;// 5 mins * 60 secs/min, working with secs instead of milis
 
             let nowTime = parseInt(new Date().getTime().toString().slice(0, -3));
             let recTime = parseInt(message.split(SEP)[1]);
@@ -181,7 +182,8 @@ class Blockchain {
             // INVALID
             } else {
                 reject(`Submitted star expired at: ${recTime}`)
-                    .catch(error => { Logger.Logger.e(error.message); });
+                    //.catch(error => { Logger.Logger.e(error); })
+                    ;
             }
         });
     }
@@ -202,23 +204,15 @@ class Blockchain {
                 resolve("Error while searching blocks by hash, chain is empty!");
 
            } else {
-                let target = null;
-
-                for (var i = 0; i < self.chain.length; i++) {
-                    var current = self.chain[i];
-
-                    if (current.hash == hash) {
-                        target = current;
-                        break;
-                    }
-                }
+                let target = self.chain.filter((block) => block.hash == hash);
 
                 if (target) {
                     resolve(target);
 
                 } else {
                     reject(`Target block with hash ${hash} not found`)
-                        .catch(error => { Logger.Logger.e(error.message); });
+                        //.catch(error => { Logger.Logger.e(error); })
+                        ;
                 }
             }
         });
@@ -258,16 +252,16 @@ class Blockchain {
         let self = this;
         let stars = [];
 
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (this.chain.isEmpty) {
                 reject("Error while searching stars by address, chain is empty!")
-                    .catch(error => { Logger.Logger.e(error.message); });
+                    .catch(error => { Logger.Logger.e(error); });
 
             } else {
                 for (var i = 1; i < self.chain.length; i++) {
                     var currentBlock = self.chain[i];
 
-                    var currentStar = currentBlock.getBData().then((data) => { 
+                    var currentStar = await currentBlock.getBData().then((data) => { 
                         Logger.Logger.i("retrieved data: " + data);
                         if (data.address == address) {
                             stars.push(data);
@@ -277,7 +271,8 @@ class Blockchain {
 
                 if (stars.isEmpty) {
                     reject(`No stars found for address ${address}`)
-                        .catch(error => { Logger.Logger.e(error.message); });
+                        //.catch(error => { Logger.Logger.e(error); })
+                        ;
 
                 } else {
                     resolve(stars);
@@ -301,14 +296,14 @@ class Blockchain {
             
             if (self.chain.isEmpty) {
                 reject("Error while validating, chain is empty!")
-                    .catch(error => {Logger.Logger.e(error.message); });
+                    .catch(error => {Logger.Logger.e(error); });
 
             } else {
                 for (var i = 0; i < self.chain.length; i++) {
                     var currentBlock = self.chain[i];
 
                     // (INNER) BLOCK VALIDATION
-                    var currentValid = currentBlock.validate();
+                    var currentValid = await currentBlock.validate();
 
                     // (OUTER) CHAIN VALIDATION
                     if (currentValid) {
