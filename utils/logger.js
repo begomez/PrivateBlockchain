@@ -1,26 +1,30 @@
 class Logger {
-    
-    constructor() {
-        
+    static PRINT_INFO = true;
+    static PRINT_ERROR = true;
+
+    constructor() {}
+
+    static i(msg) {
+        i("", msg);
     }
 
-    i(msg) {
-        this.i("", msg);
+    static i(tag, msg) {
+        if (Logger.PRINT_INFO) {
+            //if (tag) console.log(tag);
+            console.log(msg);
+        }
     }
 
-    i(tag, msg) {
-        console.log(tag);
-        console.log(msg);
+    static e(msg) {
+        e("", msg);
     }
 
-    e(msg) {
-        this.e("", msg);
-    }
-
-    e(tag, msg) {
-        console.log("ERROR");
-        console.log(tag);
-        console.log(msg);
+    static e(tag, msg) {
+        if (Logger.PRINT_ERROR) {
+            console.log("ERROR");
+            //if (tag) console.log(tag);
+            console.log(msg);
+        }
     }
 }
 

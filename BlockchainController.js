@@ -8,6 +8,9 @@ const bodyParser = require("body-parser");
  * Blockchain dataset
  */
 class BlockchainController {
+    static SUCCESS = 200;
+    static ERROR = 404;
+    static INTERNAL_ERROR = 500;
 
     //The constructor receive the instance of the express.js app and the Blockchain class
     constructor(app, blockchainObj) {
@@ -33,10 +36,10 @@ class BlockchainController {
             let result = await this.blockchain.validateChain();
 
             if (result) {
-                return resp.status(200).json(result);
+                return resp.status(BlockchainController.SUCCESS).json(result);
 
             } else {
-                return resp.status(404).send("Chain validation failed");
+                return resp.status(BlockchainController.INTERNAL_ERROR).send("Chain validation failed");
             }
         });
     }
@@ -52,16 +55,16 @@ class BlockchainController {
                 
                 // VALID BLOCK
                 if (block){
-                    return res.status(200).json(block);
+                    return res.status(BlockchainController.SUCCESS).json(block);
 
                 // INVALID BLOCK
                 } else {
-                    return res.status(404).send("Block Not Found!");
+                    return res.status(BlockchainController.INTERNAL_ERROR).send("Block Not Found By Height!");
                 }
 
             // INVALID REQ
             } else {
-                return res.status(404).send("Block Not Found! Review the Parameters!");
+                return res.status(BlockchainController.ERROR).send("Block Not Found. Please review parameter:" + req.params.height);
             }
             
         });
@@ -78,16 +81,16 @@ class BlockchainController {
 
                 // MSG
                 if (message){
-                    return res.status(200).json(message);
+                    return res.status(BlockchainController.SUCCESS).json(message);
 
                 // ERROR
                 } else {
-                    return res.status(500).send("An error happened!");
+                    return res.status(BlockchainController.INTERNAL_ERROR).send("An error happened while requesting ownership!");
                 }
 
             // INVALID REQ
             } else {
-                return res.status(500).send(`Check the Body Parameter: ${JSON.stringify(req.body.address).toString()}`);
+                return res.status(BlockchainController.ERROR).send(`Ownership request error! Please review parameter: ${JSON.stringify(req.body.address).toString()}`);
             }
         });
     }
@@ -104,28 +107,32 @@ class BlockchainController {
                 const targetStar = req.body.star;
 
                 try {
+
+                    // VALID PARAMS
                     if (targetAddress && targetMessage && targetSignature && targetStar) {
                         let block = await this.blockchain.submitStar(targetAddress, targetMessage, targetSignature, targetStar);
                         
                         // DATA RETRIEVED
                         if (block){
-                            return res.status(200).json(block);
+                            return res.status(BlockchainController.SUCCESS).json(block);
 
                         // ERROR   
                         } else {
-                            return res.status(500).send("An error happened!");
-                        }                        
+                            return res.status(BlockchainController.INTERNAL_ERROR).send("An error happened while submitting the star!");
+                        } 
+
+                    // INVALID
                     } else {
-                        return res.status(500).send(`Check the Body Parameter: ${JSON.stringify(req.body).toString()}`); 
+                        return res.status(BlockchainController.ERROR).send(`Submission error! Please review parameter: ${JSON.stringify(req.body).toString()}`); 
                     }
 
                 } catch (error) {
-                    return res.status(500).send(error);
+                    return res.status(BlockchainController.INTERNAL_ERROR).send("catch " + error);
                 }
 
             // INVALID REQ
             } else {
-                return res.status(500).send(`Check the Body Parameter: ${JSON.stringify(req.body).toString()}`);
+                return res.status(BlockchainController.ERROR).send(`Submission error! Please review parameter: ${JSON.stringify(req.body).toString()}`);
             }
         });
     }
@@ -141,16 +148,16 @@ class BlockchainController {
 
                 // DATA
                 if (block){
-                    return res.status(200).json(block);
+                    return res.status(BlockchainController.SUCCESS).json(block);
 
                 // ERROR
                 } else {
-                    return res.status(404).send("Block Not Found!");
+                    return res.status(BlockchainController.INTERNAL_ERROR).send("Block Not Found By Hash!");
                 }
 
             // INVALID PARAMS
             } else {
-                return res.status(404).send("Block Not Found! Review the Parameters: " + req.params.hash);
+                return res.status(BlockchainController.ERROR).send("Block Not Found! Please review parameter: " + req.params.hash);
             }
         
         });
@@ -169,20 +176,20 @@ class BlockchainController {
                 
                     // DATA
                     if (stars){
-                        return res.status(200).json(stars);
+                        return res.status(BlockchainController.SUCCESS).json(stars);
                     
                     // ERROR
                     } else {
-                        return res.status(404).send("Block Not Found!");
+                        return res.status(BlockchainController.INTERNAL_ERROR).send("Block Not Found By Address!");
                     }
 
                 } catch (error) {
-                    return res.status(500).send("An error happened!");
+                    return res.status(BlockchainController.INTERNAL_ERROR).send("An error happened!");
                 }
 
             // INVALID PARAMS
             } else {
-                return res.status(500).send("Block Not Found! Review the Parameters!");
+                return res.status(BlockchainController.ERROR).send("Block Not Found! Please review parameter: " + req.params.address);
             }
         
         });

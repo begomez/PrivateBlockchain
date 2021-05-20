@@ -50,11 +50,16 @@ class ApplicationServer {
 
 	start() {
 		let self = this;
+
 		this.app.listen(this.app.get("port"), () => {
-			new Logger.Logger().i(`Server Listening for port: ${self.app.get("port")}`);
+			Logger.Logger.i("app", `Server listening for port: ${self.app.get("port")}`);
 		});
 	}
 
 }
+
+/*******************************************************************
+ * Entry point
+ *******************************************************************/
 
 new ApplicationServer();

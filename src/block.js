@@ -20,7 +20,7 @@ class Block {
 	constructor(data){
 		this.hash = null;                                           // Hash of the block
 		this.height = 0;                                            // Block Height (consecutive number of each block)
-		this.body = Buffer(JSON.stringify(data)).toString('hex');   // Will contain the transactions stored in the block, by default it will encode the data
+		this.body = Buffer.from(JSON.stringify(data)).toString('hex');   // Will contain the transactions stored in the block, by default it will encode the data
 		this.time = 0;                                              // Timestamp for the Block creation
 		this.previousBlockHash = null;                              // Reference to the previous Block Hash
     }
@@ -61,7 +61,7 @@ class Block {
     }
 
     isGenesisBlock() {
-        return this.height <= 0;
+        return (this.height <= 0);
     }
 
     /**
@@ -74,7 +74,6 @@ class Block {
      *     or Reject with an error.
      */
     getBData() {
-
         let self = this;
 
         return new Promise(
